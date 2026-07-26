@@ -55,7 +55,7 @@
 │       │   ├── capital_mcp_server.py # 국가 수도 조회 FastMCP 서버 소립 소스
 │       │   ├── deploy.sh         # Cloud Run 배포 자동화 쉘 스크립트
 │       │   └── test_capital_mcp.py # 로컬 stdio 통신 기능 검증용 단위 스크립트
-│       ├── mcp.py            # Registry MCP 도구를 로드하여 구동하는 Gemini 러너 (mTLS 에러 회피 포함)
+│       ├── mcp_runner.py     # Registry MCP 도구를 로드하여 구동하는 Gemini 러너 (mTLS 에러 회피 포함)
 │       └── README.md         # MCP 구성 및 빌드 가이드
 ├── pyproject.toml            # uv 연동 및 패키지 의존성(google-adk, google-genai 등) 정의 파일
 └── README.md                 # 통합 안내서 (본 파일)
@@ -111,7 +111,7 @@ cd ../../..
 
 ### 🎯 4. GCP Agent Registry 등록 MCP + Gemini 연동 실행
 ```bash
-uv run --no-sync python3 agent_registry/mcp/mcp.py
+uv run --no-sync python3 agent_registry/mcp/mcp_runner.py
 ```
 
 ---
