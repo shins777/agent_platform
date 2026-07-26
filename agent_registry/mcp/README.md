@@ -1,6 +1,6 @@
 # 🛠️ MCP Server & Agent Integration 통합 연동 가이드
 
-이 디렉토리는 국가의 수도 이름을 즉각 검색해 주는 독창적인 **Model Context Protocol (MCP)** 서버를 구축하고, 이를 클라우드 컨테이너 환경(Cloud Run)에 호스팅하여, 구글 에이전트 레지스트리(Agent Registry)에 정식 등록해 Vertex AI Gemini ADK 에이전트 도구로 실시간 융합 활용하는 전체 소스 코드와 배포 사양을 담고 있습니다.
+이 디렉토리는 국가의 수도 이름을 즉각 검색해 주는 **Model Context Protocol (MCP)** 서버를 구축하고, 이를 클라우드 컨테이너 환경(Cloud Run)에 호스팅하여, 구글 에이전트 레지스트리(Agent Registry)에 정식 등록해 Vertex AI Gemini ADK 에이전트 도구로 실시간 융합 활용하는 전체 소스 코드와 배포 사양을 담고 있습니다.
 
 ---
 
@@ -112,7 +112,7 @@ The capital of South Korea is Seoul. (Gemini가 수동으로 입력 정보를 ge
 ## 💡 주요 기술적 솔루션 설명 (Technical Deep-Dive)
 
 ### macOS 로컬 개발 SSLCertVerificationError 해결 (mTLS bypass)
-로컬 Python 가상환경 등에서 구글 ADK 및 Cloud SDK 연동 시, 라이브러리 내부에서 상호 TLS(mTLS) 연결을 위한 인증 파일 검색을 격렬히 시도하게 됩니다. 
+로컬 Python 가상환경 등에서 구글 ADK 및 Cloud SDK 연동 시, 라이브러리 내부에서 상호 TLS(mTLS) 연결을 위한 인증 파일 검색을 시도하게 됩니다. 
 이 과정에서 로컬 SSL 핸드셰이크 프로토콜이 충돌해 **`SSLCertVerificationError`** 또는 **`SSLError`**가 발생하며 소켓 연결 전체가 다운되는 결함이 자주 보고됩니다.
 
 `connect_mcp.py` 소스 상단부에서는 이러한 결함을 해결하기 위해 구글 모듈의 인증 판단을 차단하는 **인증 필터 Monkeypatch**를 적용해 두었습니다:

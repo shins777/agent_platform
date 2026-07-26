@@ -1,14 +1,12 @@
-# 🚀 GCP Agent Platform 통합 개발 플랫폼 (ADK & MCP Integration)
+# Google Cloud Agent Registry 및 Vertex AI Agent Engine 연동 플랫폼 개발 가이드
 
-이 프로젝트는 **Google Cloud Agent Registry** 및 **Vertex AI Agent Engine**과의 동적 통합을 지원하는 No-Code 에이전트, Model Context Protocol (MCP) 서버 연동, 그리고 로우레벨 직접 API 게이트웨이 호출 기능을 하나로 통합한 고성능 클라이언트 개발 플랫폼입니다. 
-
-클라우드 기반 에이전트 오케스트레이션에 익숙하지 않은 개발자들을 위해 설계되었으며, 아키텍처 원리부터 실제 로컬 실행 및 클라우드 배포까지의 모든 솔루션을 한국어로 친절히 제공합니다.
+본 문서는 Google Cloud Agent Registry 및 Vertex AI Agent Engine의 주요 연동 규격(ADK, MCP, 직접 REST API 호출)을 검증하고 개발하기 위한 로컬 개발 환경 구성 및 실행 방법 안내서입니다.
 
 ---
 
-## 🏗️ 플랫폼 아키텍처 개요 (Architectural Overview)
+## 1. 아키텍처 개요
 
-이 플랫폼은 구글 클라우드의 강력한 에이전트 연동 아키텍처를 보여주기 위해 3가지 연동 시나리오를 한 곳에 모았습니다.
+본 프로젝트는 구글 클라우드 플랫폼의 에이전트 인프라와 외부 클라이언트를 연결하는 세 가지 기술적 연동 시나리오를 포함합니다.
 
 ```text
                                   [ GCP AGENT REGISTRY (Discovery) ]
@@ -24,58 +22,57 @@
      [ Remote No-Code Agent ]             [ FastMCP Cloud Run ]              [ streamAssist API ]
 ```
 
-### 1. 🤖 No-Code 에이전트 연동 (ADK SDK 활용)
-- **개념**: 구글 Vertex AI Agent Engine에 생성한 대화형 에이전트를 SDK를 사용하여 조회 및 동적으로 스트리밍 호출합니다.
-- **주요 해결책**: ADK 라이브러리의 엄격한 영어 정규식 필터링 한계를 해결하기 위해 **한글 에이전트 이름 지원 런타임 Monkeypatch**가 탑재되어 있습니다.
+### 시나리오 1: No-Code 에이전트 연동 (ADK SDK)
+*   **개요**: 구글 Vertex AI Agent Engine에 배포된 대화형 노코드 에이전트를 ADK SDK를 이용해 검색하고, Agent-to-Agent(A2A) 보안 게이트웨이를 경유하여 양방향 스트리밍 세션을 형성합니다.
+*   **해결 과제**: ADK 라이브러리 내부의 `AgentRegistry._clean_name` 메소드는 ASCII 문자 검증 정규식 제한으로 인해 한글 자모가 포함된 에이전트명을 로드할 때 실행 예외(AssertionError)를 발생시킵니다. 본 프로젝트는 `re.sub(r"[^\w]", "_", name_str)` 형태의 런타임 Monkeypatch를 적용하여 한글 에이전트명을 정상 식별할 수 있도록 조치하였습니다.
 
-### 2. 🛠️ GCP Agent Registry MCP 도구 연동 (Gemini ADK Agent)
-- **개념**: Model Context Protocol(MCP) 기술을 사용하여 국가 수도 데이터 조회 기능을 독립형 FastMCP 서버로 구현 후 Cloud Run에 배포하고, 이를 Gemini 2.5 Flash 모델의 도구(Toolset)로 정식 연동하여 AI가 스스로 도구를 활용해 추론을 완수하게 돕습니다.
-- **주요 해결책**: 로컬 macOS/Linux 환경에서 발생하는 치명적인 SSL 인증서 에러(`SSLCertVerificationError`)를 완벽히 해결하기 위한 **mTLS 대체 일반 보안 TLS 채널 전환 패치**가 내장되어 있습니다.
+### 시나리오 2: GCP Agent Registry MCP 도구 연동 (Gemini ADK Agent)
+*   **개요**: 국가 수도 검색 API 기능을 처리하는 FastMCP 독립 서버를 개발하여 Cloud Run에 배포하고, 구글 에이전트 레지스트리에 등록합니다. 클라이언트 측 Gemini 2.5 Flash 모델은 ADK `McpToolset`을 통해 해당 도구 명세를 주입받아 필요 시 자동으로 구동합니다.
+*   **해결 과제**: macOS 등 일부 로컬 파이썬 개발 환경에서 구글 보안 SDK 가동 시 로컬 mTLS(상호 TLS) 인증서 검증 오작동으로 인한 `SSLCertVerificationError`가 빈번히 보고됩니다. 이를 방지하기 위해 `google.auth.transport.mtls.should_use_client_cert` 탐지 기능을 `False`로 재정의하여 보안 등급 저하 없이 일반 SSL/TLS 소켓과 Bearer 토큰 인증으로 대체하도록 설계하였습니다.
 
-### 3. 🌐 직접 REST API 게이트웨이 호출 (streamAssist)
-- **개념**: 특수한 SDK나 어댑터 라이브러리 없이도 구글의 공인인증 세션(`AuthorizedSession`)을 사용하여 HTTP POST JSON-RPC를 직접 질의하고, 청크 스트림을 한 번에 병합(Aggregate)해내는 초경량 직접 호출 모듈입니다.
-- **주요 해결책**: 한글과 같은 다중 바이트 문자(UTF-8)가 네트워크 패킷 경계선에서 반절로 잘려 수신될 때 발생하는 한국어 깨짐 현상 및 `UnicodeDecodeError`를 방지하기 위해 **바이트 버퍼 누적 후 디코딩 기술**을 사용합니다. JSON 패킷 훼손 시 자동으로 문자열을 살려내는 **Regex(정규식) 기반 보완적 텍스트 복구 알고리즘**도 탑재되어 있습니다.
+### 시나리오 3: 직접 REST API 게이트웨이 호출 (streamAssist)
+*   **개요**: 전용 ADK SDK를 사용하지 않고 구글 공인 세션 라이브러리(`AuthorizedSession`)를 직접 이용하여 Vertex AI Agent Engine의 로우레벨 HTTP POST `streamAssist` 엔드포인트를 호출하고 스트리밍 데이터 조각을 실시간으로 가공합니다.
+*   **해결 과제**: 
+    1.  **UTF-8 멀티바이트 문자 잘림 제어**: 한국어(UTF-8, 3바이트) 전송 시 네트워크 TCP 패킷 경계면에서 바이트가 분할 수신되면 즉각적인 `.decode('utf-8')` 수행 도중 `UnicodeDecodeError`가 발생하거나 문자가 깨집니다. 이 모듈은 원시 데이터를 `bytearray` 버퍼에 축적한 뒤 스트림이 완전히 종료되는 시점에 단 한 번 전체 디코딩을 처리합니다.
+    2.  **불완전 JSON 응답 복구**: 통신 장애 등으로 응답 패킷의 JSON 포맷이 손상되어 유실될 경우를 대비해, 예외 처리 블록 내에 정규식 패턴(`re.findall()`) 및 `unicode_escape` 역환산을 적용하여 유효한 텍스트 데이터만을 추출해 내는 보완 엔진을 내장하고 있습니다.
 
 ---
 
-## 📁 디렉토리 구조 (Folder Structure)
+## 2. 디렉토리 구조
 
 ```text
 .
-├── agent_registry/           # 플랫폼 핵심 연동 폴더 📁
-│   ├── agent/                # 🤖 No-Code 에이전트 모듈
-│   │   ├── agent.py          # GCP Agent Registry No-Code 에이전트 연동 스크립트 (한글 이름 패치 포함)
-│   │   └── README.md         # No-Code Agent 연동 가이드 및 실행 명세
-│   ├── api/                  # 🌐 직접 REST API 호출 모듈
-│   │   ├── api.py            # streamAssist 직접 HTTP POST 및 파이싱 스크립트 (한국어 버퍼 깨짐 방지 장착)
-│   │   └── README.md         # 직접 API 호출 가이드 및 페이로드 명세
-│   └── mcp/                  # 🛠️ MCP 도구셋 연동 모듈
-│       ├── build/            # MCP 서버 빌드 및 클라우드 배포 패키지 📁
-│       │   ├── Dockerfile        # MCP 서버 컨테이너 빌드 파일
-│       │   ├── capital_mcp_server.py # 국가 수도 조회 FastMCP 서버 소립 소스
-│       │   ├── deploy.sh         # Cloud Run 배포 자동화 쉘 스크립트
-│       │   └── test_capital_mcp.py # 로컬 stdio 통신 기능 검증용 단위 스크립트
-│       ├── connect_mcp.py    # Registry MCP 도구를 로드하여 구동하는 Gemini 러너 (mTLS 에러 회피 포함)
-│       └── README.md         # MCP 구성 및 빌드 가이드
-├── pyproject.toml            # uv 연동 및 패키지 의존성(google-adk, google-genai 등) 정의 파일
-└── README.md                 # 통합 안내서 (본 파일)
+├── agent_registry/           # 핵심 연동 소스 코드 폴더
+│   ├── agent/                # No-Code 에이전트 연동 모듈
+│   │   ├── agent.py          # ADK No-Code 에이전트 검색 및 실시간 호출 스크립트 (한글 명칭 Monkeypatch 적용)
+│   │   └── README.md         # No-Code 에이전트 모듈 전용 안내서
+│   ├── api/                  # 직접 REST API 연동 모듈
+│   │   ├── api.py            # streamAssist 직접 호출 및 UTF-8 누적 바이트 버퍼 구현 스크립트
+│   │   └── README.md         # 직접 REST API 연동 모듈 전용 안내서
+│   └── mcp/                  # MCP 도구셋 연동 모듈
+│       ├── build/            # MCP 서버 빌드 및 Cloud Run 배포 아티팩트
+│       │   ├── Dockerfile        # 컨테이너 이미지 명세서
+│       │   ├── capital_mcp_server.py # FastMCP 기반 수도 검색 도구 서버 코드
+│       │   ├── deploy.sh         # GCP 서울 리전 배포 쉘 스크립트
+│       │   └── test_capital_mcp.py # 로컬 stdio 통신 기능 검증용 단위 검사 스크립트
+│       ├── connect_mcp.py    # Registry에 등록된 MCP 서버를 호출하여 Gemini 2.5와 결합 구동하는 스크립트
+│       └── README.md         # MCP 모듈 배포 및 연동 전용 안내서
+├── pyproject.toml            # uv 전용 가상환경 의존성 정의 파일 (google-adk, google-genai, mcp)
+└── README.md                 # 전체 플랫폼 통합 안내서 (본 문서)
 ```
 
 ---
 
-## 🛠️ 가상환경 설정 및 실행 가이드 (Virtual Environment with `uv`)
+## 3. 가상환경 구성 가이드 (uv)
 
-이 프로젝트는 Astral사에서 제작한 초고속 파이썬 패키지 및 가상환경 관리 도구인 **`uv`**를 활용하여 로컬 개발 환경을 쉽고 안정적으로 구성할 수 있습니다.
+본 프로젝트는 의존성 격리와 패키지 통제를 위해 `uv` 도구를 활용합니다. 시스템 전역(site-packages)에 사전에 안전하게 설치되어 상속되는 구글 클라우드 관련 모듈들과의 호환 및 충돌 방지를 위해 `--system-site-packages` 옵션을 필수 적용하여 구성합니다.
 
-구글 클라우드 전용 프라이빗 패키지(`google-adk`)가 시스템/전역(Library site-packages)에 사전에 안전하게 바인딩되어 있으므로, `uv` 가상환경 구성 시 **`--system-site-packages`** 옵션을 부여하여 충돌 없이 초고속으로 글로벌 패키지를 연동 상속하여 사용합니다.
-
-### 1. 가상환경 생성 (venv Setup)
-시스템에 바인딩된 글로벌 Python 3.13 및 패키지를 연계 상속하는 가상환경을 생성합니다.
+### 가상환경 생성
 ```bash
 uv venv --python /Library/Frameworks/Python.framework/Versions/3.13/bin/python3 --system-site-packages --allow-existing
 ```
 
-### 2. 가상환경 활성화 (Activation)
+### 가상환경 활성화
 *   **macOS / Linux**:
     ```bash
     source .venv/bin/activate
@@ -87,56 +84,52 @@ uv venv --python /Library/Frameworks/Python.framework/Versions/3.13/bin/python3 
 
 ---
 
-## 🚀 에이전트 및 API 실행 커맨드 (Execution Commands)
+## 4. 모듈별 실행 방법
 
-가상환경을 활성화한 상태에서 혹은 `uv run` 접두사를 붙여 언제든지 스크립트를 독립적이고 신속하게 실행할 수 있습니다.
+가상환경이 활성화되었거나 `uv run` 명령어로 실행 환경이 잡힌 터미널에서 다음 스크립트들을 개별 실행합니다.
 
-### 🤖 1. No-Code 에이전트 연동 실행
+### 1. No-Code 에이전트 연동 테스트
 ```bash
 uv run --no-sync python3 agent_registry/agent/agent.py
 ```
 
-### 🌐 2. 직접 API streamAssist 취합 호출 실행
+### 2. 직접 REST API streamAssist 연동 테스트
 ```bash
 uv run --no-sync python3 agent_registry/api/api.py
 ```
 
-### 🛠️ 3. 로컬 MCP 서버 stdio 기능 수동 검증
-GCP에 배포하기 전에 로컬 소프로세스 통신(Stdio)을 통하여 서버가 도구를 정상 반환하는지 탐색합니다.
+### 3. 로컬 MCP 서버 Stdio 통신 기능 검증
+GCP 클라우드 배포 전에 로컬 stdio 채널 상태에서 작동을 개별 테스트합니다.
 ```bash
 cd agent_registry/mcp/build
 uv run --no-sync python3 test_capital_mcp.py
 cd ../../..
 ```
 
-### 🎯 4. GCP Agent Registry 등록 MCP + Gemini 연동 실행
+### 4. GCP Agent Registry 등록 MCP + Gemini 결합 구동 테스트
 ```bash
 uv run --no-sync python3 agent_registry/mcp/connect_mcp.py
 ```
 
 ---
 
-## 💡 개발자를 위한 필수 클라우드 환경 가이드 (Prerequisites)
+## 5. 구글 클라우드 환경 전제 조건 (Prerequisites)
 
-이 코드가 실제 클라우드 인프라와 정상 통신하기 위해서는 GCP 인증 환경 및 권한 수립이 올바르게 완료되어 있어야 합니다.
+이 예제들이 구글 클라우드 리소스와 올바르게 통신하려면 개발 환경 장비에 적절한 권한 및 세션이 초기화되어 있어야 합니다.
 
-### 1. Google Cloud CLI (gcloud) 로그인 및 프로젝트 바인딩
-터미널 환경에서 아래 명령어를 사용하여 대상 Google 계정으로 로그인하고 개발 프로젝트 ID를 할당합니다.
+### 1. gcloud CLI 설정 및 프로젝트 연결
+로컬 환경에 구글 클라우드 SDK(gcloud CLI)가 정상 설치되어 있어야 하며 아래 명령으로 세션을 바인딩합니다.
 ```bash
 gcloud auth login
 gcloud config set project ai-hangsik
 ```
 
-### 2. 애플리케이션 기본 자격 증명 (Application Default Credentials, ADC) 활성화
-로컬 파이썬 스크립트가 로컬 파일에 상주하는 사용자 토큰을 읽어서 자동으로 GCP API를 타격할 수 있도록 보안 터널을 뚫어 줍니다.
+### 2. 애플리케이션 기본 자격 증명(ADC) 및 권한 범위(Scopes) 추가 구성
+ADK 에이전트 탐색 및 호출 보안 게이트웨이는 엄격한 OAuth 토큰 범위를 수반해야 합니다. 기본 로그인만 거칠 경우 `cloud-platform` 권한이 누락되므로 반드시 아래 명령을 수행하여 Scopes 옵션이 적용된 사용자 토큰 파일을 로컬에 재발행해야 합니다.
 ```bash
-# 기본 ADC 로그인
-gcloud auth application-default login
-
-# [필독] ADK 및 에이전트 A2A 게이트웨이 연동 시 cloud-platform 권한 범위(scope) 강제 연동 명령어
 gcloud auth application-default login --scopes="https://www.googleapis.com/auth/cloud-platform"
 ```
 
-### 3. 클라우드 필수 IAM 권한 요구사항
-- **에이전트 검색 및 게이트웨이 호출**: 연동 계정이 `Vertex AI Administrator` 또는 `Vertex AI User` 역할을 가지고 있어야 합니다.
-- **MCP Cloud Run 배포**: 배포 쉘 스크립트 수행을 위해 `Cloud Run Admin`, `Service Account User`, `Artifact Registry Writer` 권한이 요구됩니다.
+### 3. 계정별 필수 IAM 권한 역할
+*   **No-Code 에이전트 조회 및 호출**: `Vertex AI Administrator` 또는 `Vertex AI User` 역할 필요.
+*   **MCP 서버 빌드 및 Cloud Run 서비스 배포**: `Cloud Run Admin`, `Service Account User`, `Artifact Registry Writer` 역할 필요.
