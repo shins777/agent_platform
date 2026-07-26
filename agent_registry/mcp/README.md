@@ -121,4 +121,4 @@ import google.auth.transport.mtls as auth_mtls
 # 클라이언트 mTLS 인증서 자동 사용 판단 함수가 항상 False를 응답하도록 재정의
 auth_mtls.should_use_client_cert = lambda: False
 ```
-mTLS를 해제하더라도, API 연동 시 일반 암호화 TLS 포트를 경유하고 구글 클라우드의 고유 Bearer OAuth 토큰을 철저히 인증 헤더에 태워 전송하므로, **동작 유연성은 확보하면서 보안성은 최고 수준으로 엄격하게 그대로 유지**됩니다.
+mTLS를 해제하더라도, API 연동 시 일반 암호화 TLS 포트를 경유하고 구글 클라우드의 고유 Bearer OAuth 토큰을 인증 헤더에 태워 전송하므로, **동작 유연성은 확보하면서 보안성은 최고 수준으로 그대로 유지**됩니다.
