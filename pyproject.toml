@@ -1,0 +1,18 @@
+[project]
+name = "agentplatform"
+version = "0.1.0"
+description = "GCP Agent Registry No-Code Agent & MCP Integration Platform"
+requires-python = ">=3.13"
+dependencies = [
+    "google-adk[agent-identity]>=1.31.0",
+    "google-genai>=1.0.0",
+    "mcp[cli]>=1.0.0",
+    "httpx>=0.20.0",
+    "google-auth>=2.0.0",
+    "starlette>=0.40.0",
+    "uvicorn>=0.30.0",
+]
+
+[tool.uv]
+managed = true
+package = false
