@@ -72,7 +72,7 @@
 uv venv --python /Library/Frameworks/Python.framework/Versions/3.13/bin/python3 --system-site-packages --allow-existing
 ```
 
-### 가상환경 활성화
+### 가상환경 활성화 방안
 *   **macOS / Linux**:
     ```bash
     source .venv/bin/activate
