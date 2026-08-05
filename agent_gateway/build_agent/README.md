@@ -32,11 +32,11 @@ flowchart TD
 
 | File Name | Role & Description |
 | :--- | :--- |
-| **[`agent.py`](file:///Users/hangsik/Documents/Antigravity/agentplatform/agent_gateway/agent/agent.py)** | Defines the ADK Agent (`search_agent_0805`) configured with `gemini-2.5-flash` and `GoogleSearchTool`, plus an A2A protocol wrapper (`to_a2a`). |
-| **[`deploy_agent.py`](file:///Users/hangsik/Documents/Antigravity/agentplatform/agent_gateway/agent/deploy_agent.py)** | Complete Python deployment pipeline: loads ADK agent, builds Vertex AI `AgentEngine`, and registers/updates A2A Agent Card in GCP Agent Registry. |
-| **[`deploy.sh`](file:///Users/hangsik/Documents/Antigravity/agentplatform/agent_gateway/agent/deploy.sh)** | Executable Bash wrapper script setting environment variables (`PROJECT_ID`, `LOCATION`, `STAGING_BUCKET`, `DISPLAY_NAME`) and executing `deploy_agent.py`. |
-| **[`call_agent_directly.py`](file:///Users/hangsik/Documents/Antigravity/agentplatform/agent_gateway/agent/call_agent_directly.py)** | Direct client caller using Vertex AI SDK (`vertexai.agent_engines.list()`). Locates `Search_Agent-0805`, creates a session, and streams responses. |
-| **[`call_agent_registry.py`](file:///Users/hangsik/Documents/Antigravity/agentplatform/agent_gateway/agent/call_agent_registry.py)** | Client caller using ADK SDK (`AgentRegistry`). Searches GCP Agent Registry for `Search_Agent-0805`, resolves live Target URL (`get_agent_info`), and calls the agent. |
+| **[`agent.py`](file:///Users/hangsik/Documents/Antigravity/agentplatform/agent_gateway/build_agent/agent.py)** | Defines the ADK Agent (`search_agent_0805`) configured with `gemini-2.5-flash` and `GoogleSearchTool`, plus an A2A protocol wrapper (`to_a2a`). |
+| **[`deploy_agent.py`](file:///Users/hangsik/Documents/Antigravity/agentplatform/agent_gateway/build_agent/deploy_agent.py)** | Complete Python deployment pipeline: loads ADK agent, builds Vertex AI `AgentEngine`, and registers/updates A2A Agent Card in GCP Agent Registry. |
+| **[`deploy.sh`](file:///Users/hangsik/Documents/Antigravity/agentplatform/agent_gateway/build_agent/deploy.sh)** | Executable Bash wrapper script setting environment variables (`PROJECT_ID`, `LOCATION`, `STAGING_BUCKET`, `DISPLAY_NAME`) and executing `deploy_agent.py`. |
+| **[`call_agent_directly.py`](file:///Users/hangsik/Documents/Antigravity/agentplatform/agent_gateway/build_agent/call_agent_directly.py)** | Direct client caller using Vertex AI SDK (`vertexai.agent_engines.list()`). Locates `Search_Agent-0805`, creates a session, and streams responses. |
+| **[`call_agent_registry.py`](file:///Users/hangsik/Documents/Antigravity/agentplatform/agent_gateway/build_agent/call_agent_registry.py)** | Client caller using ADK SDK (`AgentRegistry`). Searches GCP Agent Registry for `Search_Agent-0805`, resolves live Target URL (`get_agent_info`), and calls the agent. |
 
 ---
 
@@ -62,7 +62,7 @@ a2a_app = to_a2a(root_agent)
 Execute `deploy.sh` to build the remote Reasoning Engine and update GCP Agent Registry.
 
 ```bash
-bash agent_gateway/agent/deploy.sh
+bash agent_gateway/build_agent/deploy.sh
 ```
 
 **Pipeline Steps:**
@@ -81,7 +81,7 @@ bash agent_gateway/agent/deploy.sh
 Call the Agent Engine directly via Vertex AI SDK:
 
 ```bash
-python3 agent_gateway/agent/call_agent_directly.py "Google의 최근 발표된 Gemini AI 최신 모델 및 핵심 기능 요약해줘."
+python3 agent_gateway/build_agent/call_agent_directly.py "Google의 최근 발표된 Gemini AI 최신 모델 및 핵심 기능 요약해줘."
 ```
 
 - **Mechanism**: Lists live Reasoning Engines (`vertexai.agent_engines.list()`), creates a user session, and streams grounded search responses.
@@ -92,7 +92,7 @@ python3 agent_gateway/agent/call_agent_directly.py "Google의 최근 발표된 G
 Perform dynamic service discovery via ADK `AgentRegistry` SDK:
 
 ```bash
-python3 agent_gateway/agent/call_agent_registry.py "Google의 최근 발표된 Gemini AI 최신 모델 및 핵심 기능 요약해줘."
+python3 agent_gateway/build_agent/call_agent_registry.py "Google의 최근 발표된 Gemini AI 최신 모델 및 핵심 기능 요약해줘."
 ```
 
 - **Mechanism**:

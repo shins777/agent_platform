@@ -2,7 +2,7 @@
 """
 🤖 ADK Search Agent Deployment (Agent Gateway)
 ================================================================================
-1. Load ADK agent from agent_gateway.agent.agent (root_agent)
+1. Load ADK agent from agent_gateway.build_agent.agent (root_agent)
 2. Deploy the ADK agent to Vertex AI Agent Engine
 """
 
@@ -17,7 +17,7 @@ from vertexai import agent_engines
 # Add project root to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from agent_gateway.agent.agent import root_agent, a2a_app
+from agent_gateway.build_agent.agent import root_agent, a2a_app
 
 PROJECT_ID = os.environ.get("PROJECT_ID", "ai-hangsik")
 LOCATION = os.environ.get("LOCATION", "us-central1")
@@ -27,9 +27,9 @@ DESCRIPTION = os.environ.get("DESCRIPTION", "ADK agent that searches and analyze
 
 
 def step1_get_adk_agent():
-    """Step 1: agent_gateway/agent/agent.py에서 준비된 ADK 에이전트 및 A2A 래퍼를 로드합니다."""
+    """Step 1: agent_gateway/build_agent/agent.py에서 준비된 ADK 에이전트 및 A2A 래퍼를 로드합니다."""
     print("=========================================================================")
-    print(" 🛠️  Step 1: ADK Agent 및 A2A Protocol 래퍼 로드 (agent_gateway/agent/agent.py)")
+    print(" 🛠️  Step 1: ADK Agent 및 A2A Protocol 래퍼 로드 (agent_gateway/build_agent/agent.py)")
     print("=========================================================================")
     print(f"✅ ADK Agent 로드 완료: {root_agent.name}")
     print(f"   - Model: {root_agent.model}")

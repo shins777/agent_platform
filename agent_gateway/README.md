@@ -101,15 +101,15 @@ gcloud auth application-default login --scopes="https://www.googleapis.com/auth/
 *   `DISPLAY_NAME`: `"Google Search & Analysis Agent"`
 
 ### 2) 배포 자동화 스크립트 실행
-프로젝트 루트 폴더 또는 `agent_gateway/agent/` 디렉토리 안에서 배포 스크립트를 실행합니다.
+프로젝트 루트 폴더 또는 `agent_gateway/build_agent/` 디렉토리 안에서 배포 스크립트를 실행합니다.
 
 ```bash
 # 디렉토리 내부에서 실행 시
-cd agent_gateway/agent
+cd agent_gateway/build_agent
 ./deploy.sh
 
 # 또는 프로젝트 루트에서 직접 실행 시
-./agent_gateway/agent/deploy.sh
+./agent_gateway/build_agent/deploy.sh
 ```
 
 **실행 프로세스 요약:**
@@ -123,10 +123,10 @@ cd agent_gateway/agent
 
 ## 5. 실시간 질의 및 Grounding 검증 테스트 (How to Test)
 
-배포가 완료되면 `test_agent.py` 스크립트를 사용하여 원격 Vertex AI Agent Engine을 직접 호출하고 Google Search Grounding 동작을 검증할 수 있습니다.
+배포가 완료되면 `call_agent_directly.py` 및 `call_agent_registry.py` 스크립트를 사용하여 원격 Vertex AI Agent Engine을 호출하고 Google Search Grounding 동작을 검증할 수 있습니다.
 
 ```bash
-uv run python3 agent_gateway/agent/test_agent.py
+uv run python3 agent_gateway/build_agent/call_agent_directly.py
 ```
 
 ### 예상 터미널 출력 결과 (Non-Streaming 모드)
