@@ -2,9 +2,11 @@
 name = "agentplatform"
 version = "0.1.0"
 description = "GCP Agent Registry No-Code Agent & MCP Integration Platform"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
-    "google-adk[agent-identity]>=1.31.0",
+    "google-adk[agent-identity,a2a]>=1.31.0",
+    "google-cloud-aiplatform[agent-engines]>=1.70.0",
+    "cloudpickle>=3.0.0",
     "google-genai>=1.0.0",
     "mcp[cli]>=1.0.0",
     "httpx>=0.20.0",

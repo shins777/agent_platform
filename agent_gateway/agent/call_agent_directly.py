@@ -11,7 +11,7 @@ from vertexai import agent_engines
 
 PROJECT_ID = os.environ.get("PROJECT_ID", "ai-hangsik")
 LOCATION = os.environ.get("LOCATION", "us-central1")
-DISPLAY_NAME = os.environ.get("DISPLAY_NAME", "Google Search & Analysis Agent")
+DISPLAY_NAME = os.environ.get("DISPLAY_NAME", "Search_Agent-0805")
 
 
 def get_final_response(engine, user_id, session_id, message):

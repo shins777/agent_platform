@@ -9,10 +9,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 # 환경 변수 기본값 설정
+export PATH="/Users/hangsik/gcloud/google-cloud-sdk/bin:$PATH"
+export CLOUDSDK_PYTHON="${CLOUDSDK_PYTHON:-/Library/Frameworks/Python.framework/Versions/3.12/bin/python3}"
 export PROJECT_ID="${PROJECT_ID:-ai-hangsik}"
 export LOCATION="${LOCATION:-us-central1}"
 export STAGING_BUCKET="${STAGING_BUCKET:-gs://ai-hangsik-adk-staging}"
-export DISPLAY_NAME="${DISPLAY_NAME:-Google Search & Analysis Agent}"
+export DISPLAY_NAME="${DISPLAY_NAME:-Search_Agent-0805}"
 export DESCRIPTION="${DESCRIPTION:-ADK agent that searches and analyzes user requests using Google Search.}"
 
 echo "========================================================================="
@@ -33,7 +35,13 @@ gcloud config set project "$PROJECT_ID"
 echo ""
 echo "2. deploy_agent.py 실행 중..."
 cd "$PROJECT_ROOT"
-uv run python3 "$SCRIPT_DIR/deploy_agent.py"
+if command -v uv >/dev/null 2>&1; then
+    uv run python3 "$SCRIPT_DIR/deploy_agent.py"
+elif [ -f "$PROJECT_ROOT/.venv/bin/python3" ]; then
+    "$PROJECT_ROOT/.venv/bin/python3" "$SCRIPT_DIR/deploy_agent.py"
+else
+    python3 "$SCRIPT_DIR/deploy_agent.py"
+fi
 
 echo ""
 echo "========================================================================="
