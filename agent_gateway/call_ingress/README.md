@@ -16,11 +16,11 @@ This directory contains the Ingress client ADK agent script that connects to  Go
 Run from the project root using `uv`:
 
 ```bash
-uv run python3 agent_gateway/ingress/client_agent.py
+uv run python3 agent_gateway/call_ingress/client_agent.py
 ```
 
 Or pass a custom query as a command-line argument:
 
 ```bash
-uv run python3 agent_gateway/ingress/client_agent.py "Gemini 2.5 Flash 모델의 특징을 설명해줘."
+uv run python3 agent_gateway/call_ingress/client_agent.py "Gemini 2.5 Flash 모델의 특징을 설명해줘."
 ```
